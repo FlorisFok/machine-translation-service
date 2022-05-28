@@ -2,3 +2,7 @@ transformers
 sentencepiece
 torch
 flask
+textblob
+fasttext-langdetect
+wget
+requests
