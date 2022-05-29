@@ -93,9 +93,13 @@ class Translator():
             if self.models[route][0].device.type != 'cpu':
                 batch = {k:v.cuda() for k,v in batch.items()}
             
-            # Translate and convert to words
-            gen = self.models[route][0].generate(**batch)
+            # Translate tokens
+            with torch.no_grad():
+                gen = self.models[route][0].generate(**batch)
+            
+            # Tokens to words
             words += self.models[route][1].batch_decode(gen.cpu(), skip_special_tokens=True) 
+
 
         # Return as one string
         return ''.join(words), message
