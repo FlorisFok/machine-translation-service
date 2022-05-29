@@ -29,6 +29,7 @@ class Translator():
         # If other model is on CUDA, remove
         if self.model_on_cuda in self.models:
             self.models[self.model_on_cuda][0].cpu()
+            torch.cuda.empty_cache()
         
         # Move new model to CUDA
         self.models[model_route][0].cuda()
