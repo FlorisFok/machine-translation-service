@@ -58,7 +58,7 @@ class Translator():
         self.models[route] = (model,tok)
         return 1, f"successfully loaded model for {route} transation"
 
-    def translate(self, source, target, text, batch_size = 30):
+    def translate(self, source, target, text, batch_size = 32):
         """
         - First select model and check existence
         - Then translate text per sentence, batch sentences by 30.

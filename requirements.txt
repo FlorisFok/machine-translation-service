@@ -2,6 +2,8 @@ transformers
 sentencepiece
 torch
 flask
+pydantic
+Flask-Pydantic
 textblob
 fasttext-langdetect
 wget

@@ -3,7 +3,10 @@ from flask import Flask, request, jsonify
 from translate import Translator
 from config import *
 from ftlangdetect import detect
+from flask_pydantic import validate # To be implemented
 from torch.cuda import is_available
+
+# CUDA CHECK
 device = "cuda" if is_available() else 'cpu'
 print('RUNNING ON:', device)
 
@@ -20,18 +23,10 @@ NORMAL_BATCH_SIZE = 32
 MISSED = set()
 HAVE = set([i[0] for i in translator.get_supported_langs()])
 
-@app.route('/', methods=["GET"])
+@app.route('/healthcheck', methods=["GET"])
 def health_check():
     """Confirms service is running"""
-    return "Machine translation service is up and running."
-
-@app.route('/lang_routes', methods = ["GET"])
-def get_lang_route():
-    """Returns a alternative route if model for direct translations doesn't exists"""
-    lang = request.args['lang']
-    all_langs = translator.get_supported_langs()
-    lang_routes = [l for l in all_langs if l[0] == lang]
-    return jsonify({"output":lang_routes})
+    return "ok"
 
 @app.route('/supported_languages', methods=["GET"])
 def get_supported_languages():
@@ -44,7 +39,7 @@ def get_missing_languages():
     """Returns list of missing languages"""
     return jsonify({"output":list(MISSED)})
 
-@app.route('/dowload_model', methods=["POST"])
+@app.route('/v1/dowload_model', methods=["POST"])
 def dowload_model():
     """Dowload model, check after download if succesful"""
     source = request.json['source']
@@ -58,12 +53,12 @@ def dowload_model():
 
     return jsonify({"output":'Trying to download it'}) 
 
-@app.route('/detect', methods=["POST"])
+@app.route('/v1/detect', methods=["POST"])
 def detect_language():
     """Use detection standalone"""
-    return jsonify(detect(request.json['text']))
+    return jsonify(detect(request.json['text'].replace('\n', ' ')))
 
-@app.route('/translate', methods=["POST"])
+@app.route('/v1/translate', methods=["POST"])
 def get_prediction():
     """Translate incoming strings: if it was a success the results will start with "success..."""
     global MISSED
@@ -76,7 +71,7 @@ def get_prediction():
     if 'source' in request.json:
         source = request.json['source']
     else:
-        detdict = detect(text)
+        detdict = detect(text.replace('\n', ' '))
         source = detdict['lang']
     
     # Custom batchsize for testing
