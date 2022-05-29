@@ -15,10 +15,10 @@ docker run -p <port>:5000 -v /home/dtn/TranslationData:/app/data --gpus '"device
 APIs:
 - get:/supported_languages -> returns list of supported languages
 - get:/missing_languages -> returns list of languages it did not have but did detect
-- post:/dowload_model -> {"source":"lang1", "target":"lang2"}, dowloads the model in the background.
-- post:/detect -> {"text":"text"}, only detects the languages of the text
-- post:/translate -> {"source":"lang1", "target":"lang2", "text":"text"}, translate text from, to given language. 
-- post:/translate -> {"target":"lang2", "text":"text"}, translate text to given language from detected language. 
+- post:/v1/dowload_model -> {"source":"lang1", "target":"lang2"}, dowloads the model in the background.
+- post:/v1/detect -> {"text":"text"}, only detects the languages of the text
+- post:/v1/translate -> {"source":"lang1", "target":"lang2", "text":"text"}, translate text from, to given language. 
+- post:/v1/translate -> {"target":"lang2", "text":"text"}, translate text to given language from detected language. 
 
 Call the service with curl:
 ```
