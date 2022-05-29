@@ -14,6 +14,7 @@ translator = Translator(MODEL_PATH, device)
 # Settings
 app.config["DEBUG"] = True if os.getenv('DEBUGMODE', 'on') == 'on' else False
 python_env = os.getenv("PYENV", 'python3')
+NORMAL_BATCH_SIZE = 32
 
 # Tracking of langs
 MISSED = set()
@@ -77,13 +78,19 @@ def get_prediction():
     else:
         detdict = detect(text)
         source = detdict['lang']
+    
+    # Custom batchsize for testing
+    if 'batch_size' in request.json:
+        batch_size = int(request.json['batch_size'])
+    else:
+        batch_size = NORMAL_BATCH_SIZE
 
     # Save have nots
     if source not in HAVE:
         MISSED.add(source)
     
     # Translate
-    translation, message = translator.translate(source, target, text)
+    translation, message = translator.translate(source, target, text, batch_size)
     return jsonify({"results":message, "output":translation, 'source':source})
 
 
