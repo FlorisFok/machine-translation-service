@@ -6,7 +6,7 @@ from ftlangdetect import detect
 from flask_pydantic import validate # To be implemented
 from torch.cuda import is_available
 from apscheduler.schedulers.background import BackgroundScheduler
-from storage import ElasticStorage
+from storage import ElasticStorage, send_
 
 def save_queue():
     """Clear queue, push to web_metrics"""
@@ -125,6 +125,12 @@ def get_prediction():
     # Translate
     translation, message = translator.translate(source, target, text, batch_size)
     return jsonify({"results":message, "output":translation, 'source':source})
+
+
+@app.errorhandler(500)
+def internal_error(error):
+    send_("TRANSLATION 500 ERROR: " + str(error))
+    return jsonify({"results":'OOPS', 'status_code':500})
 
 
 if __name__ == '__main__':

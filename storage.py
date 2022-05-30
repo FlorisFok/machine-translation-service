@@ -2,6 +2,18 @@ from opensearchpy import OpenSearch
 import os
 import json
 
+WEBHOOK = os.getenv('WEBHOOK', '')
+
+def send_(mes):
+    # Only use if there is a webhook
+    if WEBHOOK == '':
+        return
+
+    #actual code for sending
+    requests.post('https://' + WEBHOOK, 
+                    headers={'Content-Type': 'application/json',}, 
+                    data='{ "username":"check_bot", "text": \"' + mes +'\"}')
+
 class ElasticStorage():
     database =  'webapp_metrics'
 
