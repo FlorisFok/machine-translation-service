@@ -1,10 +1,20 @@
 import os
 from flask import Flask, request, jsonify
-from translate import Translator
+from translate import Translator, QUEUE
 from config import *
 from ftlangdetect import detect
 from flask_pydantic import validate # To be implemented
 from torch.cuda import is_available
+from apscheduler.schedulers.background import BackgroundScheduler
+from storage import ElasticStorage
+
+def save_queue():
+    """Clear queue, push to web_metrics"""
+    global QUEUE
+
+    if len(QUEUE) > 0:
+        opensearch.bulk_store(opensearch.database, payload=QUEUE, method='add')
+        QUEUE = []
 
 # CUDA CHECK
 device = "cuda" if is_available() else 'cpu'
@@ -13,11 +23,13 @@ print('RUNNING ON:', device)
 # Classes
 app = Flask(__name__)
 translator = Translator(MODEL_PATH, device)
+opensearch = ElasticStorage()
+scheduler = BackgroundScheduler()
 
 # Settings
 app.config["DEBUG"] = True if os.getenv('DEBUGMODE', 'on') == 'on' else False
 python_env = os.getenv("PYENV", 'python3')
-NORMAL_BATCH_SIZE = 32
+interval_min = int(os.getenv("DB_INTER_MIN", '60'))
 
 # Tracking of langs
 MISSED = set()
@@ -27,6 +39,28 @@ HAVE = set([i[0] for i in translator.get_supported_langs()])
 def health_check():
     """Confirms service is running"""
     return "ok"
+
+@app.get("/scheduler_update")
+def scheduler_update():
+    """Get update now!"""
+    save_queue()
+    return 'ok'
+
+@app.get("/toggletimer")
+def timertoggle():
+    """"""
+    global translator, JOB, scheduler
+    
+    if translator.timer:
+        save_queue()
+        JOB.remove()
+        scheduler.stop()
+    else:
+        JOB = scheduler.add_job(save_queue, 'interval', minutes=interval_min)
+        scheduler.start()
+
+    translator.timer = False if translator.timer else True
+    return "Timer is " + ('on' if translator.timer else 'off')
 
 @app.route('/supported_languages', methods=["GET"])
 def get_supported_languages():

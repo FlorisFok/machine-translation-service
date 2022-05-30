@@ -1,12 +1,53 @@
 from transformers import MarianTokenizer, MarianMTModel
 import torch
 import os
+import time
 from typing import List
 from textblob import TextBlob
+
+QUEUE = []
+
+
+def time_me(func):
+    """
+    Decorator to test function execution time.
+    Useful in development
+    """
+    global QUEUE
+              
+    def inner(*args):
+        """ Enable deactivation of timer"""
+        global QUEUE
+
+        if not args[0].timer:
+            return func(*args)
+
+        # Time
+        t1 = time.time()
+        out = func(*args)
+        t2 = time.time()
+
+        # Print and return
+        document = {'project':'translate',
+                    'func_name':func.__name__,
+                    'class_name':args[0].name,
+                    'elapsed_time':round(t2 - t1, 3), 
+                    'timestamp': t1,
+                    'model':args[0].model_on_cuda}
+        
+        QUEUE.append(document)
+        return out
+
+    return inner
 
 
 class Translator():
     def __init__(self, models_dir, device):
+        # Dashboards
+        self.name = 'OPUS'
+        self.timer = False
+
+        # Model
         self.models = {}
         self.models_dir = models_dir
         self.model_on_cuda = ''

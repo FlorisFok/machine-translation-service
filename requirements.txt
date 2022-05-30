@@ -1,5 +1,6 @@
 transformers
 sentencepiece
+sacremoses
 torch
 flask
 pydantic
@@ -8,3 +9,5 @@ textblob
 fasttext-langdetect
 wget
 requests
+opensearch-py
+APScheduler
