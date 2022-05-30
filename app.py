@@ -117,6 +117,10 @@ def get_prediction():
     # Save have nots
     if source not in HAVE:
         MISSED.add(source)
+
+    # Skip same langauges
+    if source == target:
+        return jsonify({"results":'Source is equal to target', "output":text, 'source':target})
     
     # Translate
     translation, message = translator.translate(source, target, text, batch_size)
